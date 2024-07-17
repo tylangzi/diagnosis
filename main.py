@@ -2,6 +2,8 @@
 获取driver,并访问百度
 """
 import time
+
+import pyautogui
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
@@ -95,8 +97,12 @@ def filter_taglist():
             if type_ele.text in ["event_trigger", "tag"]:
                 # 滑动到目标位置了再点击
                 action = ActionChains(driver)
-                action.scroll_to_element(type_ele)
+                action.scroll_to_element(type_ele).perform()
                 type_ele.click()
+                # action.click(type_ele).perform()
+                # driver.execute_script("arguments[0].click();", type_ele)
+
+
                 print(f'{type_ele.text}被点击了')
                 time.sleep(1)
             print(f'{type_ele.text}没有被点击')
@@ -107,27 +113,41 @@ def filter_taglist():
             print(e)
             print("兄弟节点已经没有了")
             break
-
+    # time.sleep(1000)
 
 def paging():
     # 点击分页按钮
+
     page_loc = (By.XPATH, "//*/div[contains(text(),'页')]")
-    page_ele = driver.find_element(*page_loc)
+    page_ele = WebDriverWait(driver,100,1).until(EC.visibility_of_element_located(page_loc))
     action = ActionChains(driver)
     action.scroll_to_element(page_ele).perform()
-    action.click(page_ele).perform()
+    # action.click(page_ele).perform()
+    # 使用JavaScript执行点击操作
+    driver.execute_script("arguments[0].click();", page_ele)
+    # time.sleep(1)
+
+
+
+
 
     # 点击100页面
     page_100_loc = (By.XPATH, "//*/div[contains(text(),'100 / 页')]")
     page_100_ele = WebDriverWait(driver,100,1).until(EC.visibility_of_element_located(page_100_loc))
     action = ActionChains(driver)
-    time.sleep(1)
     action.scroll_to_element(page_100_ele).perform()
-    time.sleep(2)
     action.click(page_100_ele).perform()
+    time.sleep(3)
 
     # 划到最底部
-    action.scroll_to_element(page_100_ele).perform()
+    for i in range(3):
+        try:
+            action = ActionChains(driver)
+            action.scroll_to_element(page_100_ele).perform()
+            action.scroll_to_element(page_100_ele).perform()
+        except Exception as e:
+            print("滑动到最底部失败，尝试重新滑动")
+
 
 def diagnosis_list(id=2):
     tbody_loc = (By.XPATH, "//*/tbody[@class='n-data-table-tbody']")
@@ -172,16 +192,17 @@ def input_desc(text="【[NCA]第一轮城区泛化测试-7.8】城区，多车�
     input_dest_loc = (By.XPATH, "//*/span[contains(text(),'描述')]/../..//*/textarea")
     input_dest_ele = WebDriverWait(driver,200,1).until(EC.visibility_of_element_located(input_dest_loc))
     time.sleep(1)
-    for i in range(3):
+    for i in range(10):
         input_dest_ele.send_keys(Keys.COMMAND, 'a')
-        time.sleep(1)
+        time.sleep(0.1)
         input_dest_ele.send_keys(Keys.BACKSPACE)
-        time.sleep(1)
-    time.sleep(2)
+        time.sleep(0.1)
+    # time.sleep(2)
     # 开始输入内容
     input_dest_ele.send_keys(text)
     time.sleep(2)
 def create_work_item():
+    time.sleep(3)
     create_loc = (By.XPATH,"//*/span[contains(text(),'创建飞书工作项')]/..")
     create_ele = driver.find_element(*create_loc)
     while True:
@@ -451,7 +472,7 @@ def child_function(input_contents="纵向功能 / 融合限速 / 隧道限速"):
 
     fun_ele.click()
 
-    for input_content in [input_content for input_content in input_contents.split('/')]:
+    for input_content in [input_content for input_content in input_contents.split(' / ')]:
         item_loc = (By.XPATH, "//*/div[@class='v-vl-visible-items']")
         item_ele_list = driver.find_elements(*item_loc)
         item_ele = item_ele_list[-1]
@@ -522,7 +543,7 @@ def obstacle(input_contents="障碍物类型 / 小障碍物 / 锥桶 / 倒地锥
 
     obstacle_ele.click()
 
-    for input_content in [input_content for input_content in input_contents.split('/')]:
+    for input_content in [input_content for input_content in input_contents.split(' / ')]:
         item_loc = (By.XPATH, "//*/div[@class='v-vl-visible-items']")
         item_ele_list = driver.find_elements(*item_loc)
         item_ele = item_ele_list[-1]
@@ -557,7 +578,7 @@ def task_type(input_contents="专项测试 / 场景验证"):
 
     task_type_ele.click()
 
-    for input_content in [input_content for input_content in input_contents.split('/')]:
+    for input_content in [input_content for input_content in input_contents.split(' / ')]:
         item_loc = (By.XPATH, "//*/div[@class='v-vl-visible-items']")
         item_ele_list = driver.find_elements(*item_loc)
         item_ele = item_ele_list[-1]
@@ -592,7 +613,7 @@ def secondary(input_contents="VRU / VRU横穿点刹\急刹\过度礼让"):
 
     secondary_ele.click()
 
-    for input_content in [input_content for input_content in input_contents.split('/')]:
+    for input_content in [input_content for input_content in input_contents.split(' / ')]:
         item_loc = (By.XPATH, "//*/div[@class='v-vl-visible-items']")
         item_ele_list = driver.find_elements(*item_loc)
         item_ele = item_ele_list[-1]
@@ -628,7 +649,7 @@ def issue_type(input_contents="程序功能相关 / 策略合理性 / 车辆长�
 
     issue_type_ele.click()
 
-    for input_content in [input_content for input_content in input_contents.split('/')]:
+    for input_content in [input_content for input_content in input_contents.split(' / ')]:
         item_loc = (By.XPATH, "//*/div[@class='v-vl-visible-items']")
         item_ele_list = driver.find_elements(*item_loc)
         item_ele = item_ele_list[-1]
@@ -663,7 +684,7 @@ def takeover(input_contents="是 / 被动接管 / 功能性"):
 
     takeover_ele.click()
 
-    for input_content in [input_content for input_content in input_contents.split('/')]:
+    for input_content in [input_content for input_content in input_contents.split(' / ')]:
         item_loc = (By.XPATH, "//*/div[@class='v-vl-visible-items']")
         item_ele_list = driver.find_elements(*item_loc)
         item_ele = item_ele_list[-1]
@@ -769,108 +790,144 @@ def read_excell():
     data_frame = pd.read_excel(file_path)
     # 打印读取的数据
     for index,row in data_frame.iterrows():
-        desc_item = f"【{row['关联计划']}】{row['描述']}"
-        trip_name_item = row['Trip']
-        tag_id_item = row['Tag_id']
-        operator_item = row['经办人 ']
-        priority_item = row['优先级']
-        business_item = row['业务线']
-        what_time_item = row['时间']
-        module_item = row['问题所属模块']
-        area_item = row['区域']
-        whether_item = row['天气']
-        child_func_item = row['子功能']
-        road_type_item = row['道路类型']
-        obstacle_item = row['障碍物交互']
-        task_type_item = row['任务类型']
-        secondary_item = row['问题类别（二级）']
-        issue_type_item = row['问题类别']
-        issue_atribute_item = row['问题属性']
-        take_over_item = row['是否接管']
-        related_plan_item = row['关联计划']
+        content = read_index()
+        print(f"index的值为{content}")
+        if int(index) == int(content):
+            desc_item = f"【{row['关联计划']}】{row['描述']}"
+            trip_name_item = row['Trip']
+            tag_id_item = row['Tag_id']
+            operator_item = row['经办人 ']
+            priority_item = row['优先级']
+            business_item = row['业务线']
+            what_time_item = row['时间']
+            module_item = row['问题所属模块']
+            area_item = row['区域']
+            whether_item = row['天气']
+            child_func_item = row['子功能']
+            road_type_item = row['道路类型']
+            obstacle_item = row['障碍物交互']
+            task_type_item = row['任务类型']
+            secondary_item = row['问题类别（二级）']
+            issue_type_item = row['问题类别']
+            issue_atribute_item = row['问题属性']
+            take_over_item = row['是否接管']
+            related_plan_item = row['关联计划']
 
 
-        # 执行
-        driver = get_driver()
-        open_url(driver)
-        switch_iframe()
-        query_tripname(tripname=trip_name_item)
-        filter_taglist()
-        paging()
-        diagnosis_list(tag_id_item)
-        # 输入描述
-        input_desc(desc_item)
-        # 点击创建飞书项目
-        create_work_item()
-        input_operator(operator_item)
+            # 执行
+            driver = get_driver()
+
+            open_url(driver)
+            switch_iframe()
+            query_tripname(tripname=trip_name_item)
+            filter_taglist()
+            paging()
+            diagnosis_list(tag_id_item)
+            # 输入描述
+            input_desc(desc_item)
+            # 点击创建飞书项目
+            create_work_item()
+            input_operator(operator_item)
 
 
-        # 选择业务线
-        business(business_item)
-        # 设置优先级
-        priority(priority_item)
+            # 选择业务线
+            business(business_item)
+            # 设置优先级
+            priority(priority_item)
 
-        # 问题所属模块
-        module(module_item)
+            # 问题所属模块
+            module(module_item)
 
-        # 时间
-        what_time(what_time_item)
+            # 时间
+            what_time(what_time_item)
 
-        # 区域
-        area(area_item)
+            # 区域
+            area(area_item)
 
-        # 天气
-        whether(whether_item)
+            # 天气
+            whether(whether_item)
 
-        # 子功能
-        child_function(child_func_item)
+            # 子功能
+            child_function(child_func_item)
 
-        # 道路类型
+            # 道路类型
 
-        road_type(road_type_item)
+            road_type(road_type_item)
 
-        # 障碍物
-        obstacle(obstacle_item)
+            # 障碍物
+            obstacle(obstacle_item)
 
-        # 任务类型
-        task_type(task_type_item)
-
-
-        # 二级分类
-        secondary(secondary_item)
-
-        #问题类别
-
-        issue_type(issue_type_item)
-
-        # 问题属性
-
-        issue_atribute(issue_atribute_item)
-
-        # 是否接管
-
-        takeover(take_over_item)
+            # 任务类型
+            task_type(task_type_item)
 
 
-        # 关联计划
-        related_plan(related_plan_item)
+            # 二级分类
+            secondary(secondary_item)
 
-        # 提交
-        submit()
-        driver.execute_script("window.open('', '_blank');")
-        driver.close()
-        switch_new_window()
-        time.sleep(2)
+            #问题类别
+
+            issue_type(issue_type_item)
+
+            # 问题属性
+
+            issue_atribute(issue_atribute_item)
+
+            # 是否接管
+
+            takeover(take_over_item)
+
+
+            # 关联计划
+            related_plan(related_plan_item)
+
+            # 提交
+            submit()
+
+            i = int(content) + 1
+            print(f"i的值为{str(i)}")
+
+            write_index(str(i))
+            print("index + 1")
+            break
+
+
+
+
+            # driver.refresh()
+            # driver.close()
+
 
 
         # return desc,tag_id,operator,business,what_time,area,whether,child_func,road_type,obstacle,task_type,secondary,issue_type,issue_atribute,take_over,related_plan
 
     print(data_frame)
 
+def read_index():
+    # 打开文件
+    with open('index.txt', 'r', encoding='utf-8') as file:
+        # 读取文件内容
+        content = int(file.read())
+    # 打印文件内容
+    print(content)
+    return content
+def write_index(content):
+    import fileinput
+
+    # 写入新内容到原文件或新文件
+    with open('index.txt', 'w') as file:
+        file.write(content)
+
+
+
 if __name__ == '__main__':
     read_excell()
+    # read_index()
+    # write_index("2")
 
-    # for id in [66,65,64,63]:
+
+
+
+
 
 
 
