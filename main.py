@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from driver.driver import driver, Driver
 import pandas as pd
-
+from pynput import keyboard
 def switch_new_window():
     handles = driver.window_handles
     driver.switch_to.window(handles[-1])
@@ -137,7 +137,7 @@ def paging():
     action = ActionChains(driver)
     action.scroll_to_element(page_100_ele).perform()
     action.click(page_100_ele).perform()
-    time.sleep(3)
+
 
     # 划到最底部
     for i in range(3):
@@ -149,38 +149,64 @@ def paging():
             print("滑动到最底部失败，尝试重新滑动")
 
 
+    time.sleep(4)
+
+
+
+
+
 def diagnosis_list(id=2):
-    tbody_loc = (By.XPATH, "//*/tbody[@class='n-data-table-tbody']")
-    tbody_ele = WebDriverWait(driver,200,1).until(EC.visibility_of_element_located(tbody_loc))
-    tr_loc = (By.XPATH, "./tr[1]")
-    tr_ele = tbody_ele.find_element(*tr_loc)
+    # 定义循环结束的标识
+    flag = False
 
-    # event_id
-    event_id_loc = (By.XPATH, "./td[@data-col-key='eventId']")
-    event_id_ele = tr_ele.find_element(*event_id_loc)
-    print("到这里了")
-    try:
-        while True:
-            action = ActionChains(driver)
-            action.scroll_to_element(event_id_ele).perform()
-            print(event_id_ele.text)
-            if int(id) == int(event_id_ele.text):
-                print(f"id找到了{event_id_ele.text}")
+    # 获取页面的数量
+    count_num = get_num_of_page()
+    for n in range(count_num):
+        # 如果找到了就结束循环
+        if flag == True:
+            break
+        # 点击某一页
+        n_count = n + 1
+        if n != 0:
+            click_one_page(n_count)
+            time.sleep(5)
 
-                # 开始诊断
-                diagnosis_loc = (By.XPATH, "./td[@data-col-key='action']/button")
-                diagnosis_ele = tr_ele.find_element(*diagnosis_loc)
-                diagnosis_ele.click()
-                break
-            # 没有找到，开始找下一个
-            next_loc = (By.XPATH, "following-sibling::tr[1]")
-            tr_ele = tr_ele.find_element(*next_loc)
-            event_id_loc = (By.XPATH, "./td[@data-col-key='eventId']")
-            event_id_ele = tr_ele.find_element(*event_id_loc)
+        # 开始进行后面的操作
+        tbody_loc = (By.XPATH, "//*/tbody[@class='n-data-table-tbody']")
+        tbody_ele = WebDriverWait(driver,200,1).until(EC.visibility_of_element_located(tbody_loc))
+        tr_loc = (By.XPATH, "./tr[1]")
+        tr_ele = tbody_ele.find_element(*tr_loc)
 
-    except Exception as e:
-        print(e)
-        print("找不到这个ID，可能是数据诊断结束或者数据丢失")
+        # event_id
+        event_id_loc = (By.XPATH, "./td[@data-col-key='eventId']")
+        event_id_ele = tr_ele.find_element(*event_id_loc)
+        print("到这里了")
+        try:
+            while True:
+                action = ActionChains(driver)
+                action.scroll_to_element(event_id_ele).perform()
+                print(event_id_ele.text)
+                if int(id) == int(event_id_ele.text):
+                    print(f"id找到了{event_id_ele.text}")
+
+                    # 开始诊断
+                    diagnosis_loc = (By.XPATH, "./td[@data-col-key='action']/button")
+                    diagnosis_ele = tr_ele.find_element(*diagnosis_loc)
+                    diagnosis_ele.click()
+                    flag = True
+                    break
+                # 没有找到，开始找下一个
+                next_loc = (By.XPATH, "following-sibling::tr[1]")
+                tr_ele = tr_ele.find_element(*next_loc)
+                event_id_loc = (By.XPATH, "./td[@data-col-key='eventId']")
+                event_id_ele = tr_ele.find_element(*event_id_loc)
+
+
+        except Exception as e:
+            print(e)
+            print("找不到这个ID，可能是数据诊断结束或者数据丢失")
+
+
 
 def input_desc(text="【[NCA]第一轮城区泛化测试-7.8】城区，多车道直行路段，自车向左变道过程中，点刹，影响体感"):
     # 将页面滑动可以诊断信息，为了让页面可见
@@ -785,7 +811,7 @@ def submit():
 
 def read_excell():
     # 指定Excel文件路径
-    file_path = '/Users/tianyalangzi/Downloads/行车-指标统计-0716.xlsx'
+    file_path = '/Users/tianyalangzi/Downloads/行车-指标统计-0718.xlsx'
     # 读取Excel文件
     data_frame = pd.read_excel(file_path)
     # 打印读取的数据
@@ -918,9 +944,44 @@ def write_index(content):
         file.write(content)
 
 
+def zanting():
+    def on_press(key):
+        try:
+            if key == keyboard.Key.esc:
+                print("按下了esc键盘")
+                return False
+        except AttributeError:
+            print('按下特殊键: {0}'.format(key))
+
+    def on_release(key):
+        print('释放键: {0}'.format(key))
+        if key == keyboard.Key.esc:
+            return False
+
+    with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
+        listener.join()
+def get_num_of_page():
+    count_loc = (By.XPATH, "//*/div[contains(text(),'共')]")
+    count_ele = WebDriverWait(driver,100,1).until(EC.visibility_of_element_located(count_loc))
+    count_num = int(int(count_ele.text.replace("共","").replace("条","").strip()) / 100) + 1
+    print("countnum的个数为",count_num)
+
+    return count_num
+def click_one_page(count_num):
+    xpath_pre = "//*/div[contains(text(),'{}') and @class='n-pagination-item n-pagination-item--clickable']".format(count_num)
+    click_page_loc = (By.XPATH,xpath_pre)
+    print("表达式",xpath_pre)
+    click_page_ele = WebDriverWait(driver,100,1).until(EC.visibility_of_element_located(click_page_loc))
+    action = ActionChains(driver)
+    action.scroll_to_element(click_page_ele).perform()
+    time.sleep(1)
+    action.click(click_page_ele).perform()
+
 
 if __name__ == '__main__':
-    read_excell()
+    while True:
+        zanting()
+        read_excell()
     # read_index()
     # write_index("2")
 
