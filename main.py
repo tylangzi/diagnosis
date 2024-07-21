@@ -12,6 +12,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from driver.driver import driver, Driver
 import pandas as pd
 from pynput import keyboard
+from pynput.keyboard import Controller, Key
+
 def switch_new_window():
     handles = driver.window_handles
     driver.switch_to.window(handles[-1])
@@ -795,7 +797,7 @@ def submit():
     action = ActionChains(driver)
     action.scroll_to_element(submit_ele).perform()
     # 提交
-    # submit_ele.click()
+    submit_ele.click()
 
     while True:
         try:
@@ -811,7 +813,7 @@ def submit():
 
 def read_excell():
     # 指定Excel文件路径
-    file_path = '/Users/tianyalangzi/Downloads/行车-指标统计-0718.xlsx'
+    file_path = '/Users/tianyalangzi/Downloads/行车-指标统计-0721.xlsx'
     # 读取Excel文件
     data_frame = pd.read_excel(file_path)
     # 打印读取的数据
@@ -846,9 +848,12 @@ def read_excell():
             open_url(driver)
             switch_iframe()
             query_tripname(tripname=trip_name_item)
-            filter_taglist()
+            # filter_taglist()
+            click_tag_list()
+            time.sleep(4)
             paging()
             diagnosis_list(tag_id_item)
+
             # 输入描述
             input_desc(desc_item)
             # 点击创建飞书项目
@@ -914,6 +919,24 @@ def read_excell():
 
             write_index(str(i))
             print("index + 1")
+
+            keyboard = Controller()
+            # 按下并释放组合键 'Ctrl+T'
+            with keyboard.pressed(Key.cmd):
+                keyboard.press('t')
+                keyboard.release('t')
+            time.sleep(2)
+            # 按下并释放组合键 'Ctrl+T'
+            with keyboard.pressed(Key.cmd):
+                keyboard.press('1')
+                keyboard.release('1')
+            time.sleep(2)
+            # 按下并释放组合键 'Ctrl+T'
+            with keyboard.pressed(Key.cmd):
+                keyboard.press('w')
+                keyboard.release('w')
+            time.sleep(3)
+
             break
 
 
@@ -979,8 +1002,8 @@ def click_one_page(count_num):
 
 
 if __name__ == '__main__':
+    zanting()
     while True:
-        zanting()
         read_excell()
     # read_index()
     # write_index("2")
